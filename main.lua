@@ -27,7 +27,9 @@ end
 
 -- implements keypressed actions defined in specific GameState
 function love.keypressed(key)
-    if GameState == "survey" then
+    if GameState == "menu" then
+        Menu:keypressed(key)
+    elseif GameState == "survey" then
         Survey:keypressed(key)
     end
 end

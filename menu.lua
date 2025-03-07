@@ -16,29 +16,29 @@ end
 
 function Menu:update(dt)
     -- Allow user to move pointer with up/down keys
-    if love.keyboard.isDown("down") then
+    --if love.keyboard.isDown("down") then
         -- Move to "Help"
-        self.pointerY = 283 
-    elseif love.keyboard.isDown("up") then
+        -- self.pointerY = 283 
+    -- elseif love.keyboard.isDown("up") then
         -- Move back to "Start Game"
-        self.pointerY = 245 
-    end
+        -- self.pointerY = 245 
+    -- end
 
     -- Detect Enter key press and update gameState
-    if love.keyboard.isDown("return") then
+    -- if love.keyboard.isDown("return") then
         -- Enter is pressed while on start game option
-        if self.pointerY == 245 then
-            GameState = "survey"  
+        -- if self.pointerY == 245 then
+            -- GameState = "survey"  
         -- Enter is pressed  while on help option
-        elseif self.pointerY == 283 then
-            self.currentScreen = "help"  
-        end
-    end
+        -- elseif self.pointerY == 283 then
+            -- self.currentScreen = "help"  
+        --end
+    -- end
 
     -- Return to menu if player exits 
-    if love.keyboard.isDown("escape") then
-        self.currentScreen = "menu"
-    end
+    -- if love.keyboard.isDown("escape") then
+        -- self.currentScreen = "menu"
+    -- end
 end
 
 function Menu:draw()
@@ -48,5 +48,27 @@ function Menu:draw()
         love.graphics.draw(self.pointer, self.pointerX, self.pointerY)
     elseif self.currentScreen == "help" then
         love.graphics.draw(self.helpScreen, 0, 0)
+    end
+end
+
+function Menu:keypressed(key)
+    -- Allow user to move pointer down to "Help"
+    if self.currentScreen == "menu" and key == "down" then
+        self.pointerY = 283
+    -- Allow user to move pointer up to  "Start Game"
+    elseif self.currentScreen == "menu" and key == "up" then
+        self.pointerY = 245
+    -- Escape button returns from the help screen to the menu screen 
+    elseif self.currentScreen == "help" and key == "escape" then
+        self.currentScreen = "menu"
+    -- Detect Enter key press and update gameState
+    elseif self.currentScreen == "menu" and key == "return" then
+        -- Enter is pressed while on start game option
+        if self.pointerY == 245 then
+            GameState = "survey"  
+        -- Enter is pressed  while on help option
+        elseif self.pointerY == 283 then
+            self.currentScreen = "help"  
+        end
     end
 end
