@@ -1,5 +1,6 @@
 require("menu")
 require("survey")
+require("pause")
 
 -- Global game state: "menu" or "survey"
 GameState = "menu"
@@ -7,6 +8,7 @@ GameState = "menu"
 function love.load()
     Menu:load()
     Survey:load()
+    Pause:load()
 end
 
 function love.update(dt)
@@ -14,6 +16,8 @@ function love.update(dt)
         Menu:update(dt)
     elseif GameState == "survey" then
         Survey:update(dt)
+    elseif GameState == "pause" then
+        Pause:update(dt)
     end
 end
 
@@ -22,6 +26,8 @@ function love.draw()
         Menu:draw()
     elseif GameState == "survey" then
         Survey:draw()
+    elseif GameState == "pause" then
+        Pause:draw()
     end
 end
 
@@ -31,5 +37,7 @@ function love.keypressed(key)
         Menu:keypressed(key)
     elseif GameState == "survey" then
         Survey:keypressed(key)
+    elseif GameState == "pause" then
+        Pause:keypressed(key)
     end
 end

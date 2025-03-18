@@ -5,6 +5,8 @@ function Survey:load()
     self.startGameScreen = love.graphics.newImage("assets/StartGame.png")
     self.schoolYardScreen = love.graphics.newImage("assets/Schoolyard.png")
     self.solarPanel = love.graphics.newImage("assets/panel.png")
+    self.correct = love.graphics.newImage("assets/correct.png")
+    self.incorrect = love.graphics.newImage("assets/incorrect.png")
 
     -- Define the potential site coordinates
     self.sites = {
@@ -40,9 +42,13 @@ function Survey:draw()
         local scaleX = 88.4 / originalWidth
         local scaleY = 94.5 / originalHeight
 
-        -- Apply scaling factors and dwar solar panel
+        -- Apply scaling factors and draw solar panel
         love.graphics.draw( self.solarPanel, self.panelX, 
                             self.panelY, 0, scaleX, scaleY )
+    elseif self.currentScreen == "correct" then
+        love.graphics.draw(self.correct, 0, 0)
+    elseif self.currentScreen == "incorrect" then
+        love.graphics.draw(self.incorrect, 0, 0)
     end
 end
 
@@ -50,20 +56,33 @@ function Survey:keypressed(key)
     if self.currentScreen == "start" and key == "return" then
         self.currentScreen = "survey"
     elseif key == "escape" then
-        GameState = "menu"
-    elseif key == "right" then
-        -- Move to the next site if not already at the last site
-        if self.currentSiteIndex < #self.sites then
-            self.currentSiteIndex = self.currentSiteIndex + 1
+        GameState = "pause"
+    elseif self.currentScreen == "survey" then
+        if key == "right" then
+            -- Move to the next site if not already at the last site
+            if self.currentSiteIndex < #self.sites then
+                self.currentSiteIndex = self.currentSiteIndex + 1
+            end
+        elseif key == "left" then
+            -- Move to the previous site if not already at the first site
+            if self.currentSiteIndex > 1 then
+                self.currentSiteIndex = self.currentSiteIndex - 1
+            end
+        elseif key == "return" then
+            -- Check the selected site
+            if self.currentSiteIndex == 2 then
+                self.currentScreen = "correct"  -- Correct choice
+            else
+                self.currentScreen = "incorrect"  -- Incorrect choice
+            end
         end
-    elseif key == "left" then
-        -- Move to the previous site if not already at the first site
-        if self.currentSiteIndex > 1 then
-            self.currentSiteIndex = self.currentSiteIndex - 1
-        end
+    elseif self.currentScreen == "incorrect" and key == "return" then
+        -- Return to survey screen for another attempt
+        self.currentScreen = "survey"
     end
 
     -- Update panel position based on current site
     self.panelX = self.sites[self.currentSiteIndex].x
     self.panelY = self.sites[self.currentSiteIndex].y
 end
+

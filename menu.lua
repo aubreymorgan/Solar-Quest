@@ -15,30 +15,7 @@ function Menu:load()
 end
 
 function Menu:update(dt)
-    -- Allow user to move pointer with up/down keys
-    --if love.keyboard.isDown("down") then
-        -- Move to "Help"
-        -- self.pointerY = 283 
-    -- elseif love.keyboard.isDown("up") then
-        -- Move back to "Start Game"
-        -- self.pointerY = 245 
-    -- end
-
-    -- Detect Enter key press and update gameState
-    -- if love.keyboard.isDown("return") then
-        -- Enter is pressed while on start game option
-        -- if self.pointerY == 245 then
-            -- GameState = "survey"  
-        -- Enter is pressed  while on help option
-        -- elseif self.pointerY == 283 then
-            -- self.currentScreen = "help"  
-        --end
-    -- end
-
-    -- Return to menu if player exits 
-    -- if love.keyboard.isDown("escape") then
-        -- self.currentScreen = "menu"
-    -- end
+    
 end
 
 function Menu:draw()
