@@ -25,15 +25,19 @@ function Survey:load()
 end
 
 function Survey:update(dt)
-
+    if self.dialog then
+        self.dialog:update(dt)
+    end
 end
 
 function Survey:draw()
+
     -- Draw screen images and/or solar panel
     if self.currentScreen == "start" then
         love.graphics.draw(self.startGameScreen, 0, 0)
+
+     -- Draw scoolyard background
     elseif self.currentScreen == "survey" then
-        -- Draw scoolyard background
         love.graphics.draw(self.schoolYardScreen, 0, 0)
 
         -- Scale the solar panel image to 88.4 x 94.5 pixels
@@ -45,39 +49,58 @@ function Survey:draw()
         -- Apply scaling factors and draw solar panel
         love.graphics.draw( self.solarPanel, self.panelX, 
                             self.panelY, 0, scaleX, scaleY )
+
+     -- Draw correct choice dialog
     elseif self.currentScreen == "correct" then
         love.graphics.draw(self.correct, 0, 0)
+
+     -- Draw incorrect choice dialog
     elseif self.currentScreen == "incorrect" then
         love.graphics.draw(self.incorrect, 0, 0)
     end
 end
 
 function Survey:keypressed(key)
+    -- User proceds by using enter key
     if self.currentScreen == "start" and key == "return" then
         self.currentScreen = "survey"
+
+     -- User pauses the game using the escape key
     elseif key == "escape" then
         GameState = "pause"
+
+     -- User is moving the solar panel with arrow keys
     elseif self.currentScreen == "survey" then
+
+        -- Move to the next site if not already at the last site
         if key == "right" then
-            -- Move to the next site if not already at the last site
             if self.currentSiteIndex < #self.sites then
                 self.currentSiteIndex = self.currentSiteIndex + 1
             end
+
+         -- Move to the previous site if not already at the first site
         elseif key == "left" then
-            -- Move to the previous site if not already at the first site
             if self.currentSiteIndex > 1 then
                 self.currentSiteIndex = self.currentSiteIndex - 1
             end
+
+         -- Check the location of the selected site
         elseif key == "return" then
-            -- Check the selected site
+
+            -- Correct choice
             if self.currentSiteIndex == 2 then
-                self.currentScreen = "correct"  -- Correct choice
+                self.currentScreen = "correct"
+                -- Move on to Game phase: Unpacking and Inspecting the Kit 
+                GameState = "unpacking"
+
+             -- Incorrect choice
             else
-                self.currentScreen = "incorrect"  -- Incorrect choice
+                self.currentScreen = "incorrect" 
             end
         end
+    
+     -- Return to survey screen for another attempt
     elseif self.currentScreen == "incorrect" and key == "return" then
-        -- Return to survey screen for another attempt
         self.currentScreen = "survey"
     end
 
