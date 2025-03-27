@@ -63,6 +63,7 @@ function Pause:keypressed(key)
             GameState = "survey"  
         -- User selected Main Menu
         elseif self.currentIndex == 2 then
+            Survey:load() -- This will reload the player position and other data
             GameState = "menu"   
         -- User selected Help
         elseif self.currentIndex == 3 then

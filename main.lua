@@ -9,7 +9,7 @@ function love.load()
     Menu:load()     -- Load Main Menu Screen
     Pause:load()    -- Load Pause Screen
     Survey:load()   -- Load Game Phase: Pre-Installation and Site Survey
-    --Sai's code here   -- Load Game Phase: Unpacking and Inspecting the Kit
+    -- Load Game Phase: Unpacking and Inspecting the Kit
 end
 
 function love.update(dt)
@@ -21,8 +21,7 @@ function love.update(dt)
         -- Update Game Phase: Pre-Installation and Site Survey 
         Survey:update(dt)
     elseif GameState == "unpacking" then
-        -- Update Game phase: Unpacking and Inspecting the Kit
-        --Sai's code here
+    -- Update Game phase: Unpacking and Inspecting the Kit
     end
 end
 
@@ -36,7 +35,6 @@ function love.draw()
         Survey:draw()
     elseif GameState == "unpacking" then
         -- Draw Game phase: Unpacking and Inspecting the Kit
-        --Sai's code here
     end
 end
 
@@ -49,6 +47,6 @@ function love.keypressed(key)
     elseif GameState == "survey" then
         Survey:keypressed(key)
     elseif GameState == "unpacking" then
-        --Sai's code here
+        -- Unpacking and Inspecting the Kit keypressed function
     end
 end
