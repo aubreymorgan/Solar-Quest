@@ -1,12 +1,13 @@
 -- Move on to Game phase: Unpacking and Inspecting the Kit 
 -- GameState = "unpacking"
+require("animation")
 
 Survey = {}
 
 function Survey:load()
-    -- Load animation file from library
-    self.anim8 = require 'libraries/anim8'
-    -- Prevents graphics from bluring when scaled up 
+    -- Load animation and pass Survey as a parameter
+    Animation:load(self) -- Pass Survey as a parameter
+
     love.graphics.setDefaultFilter("nearest", "nearest")
 
     -- Initilaize images from assets folder
@@ -33,24 +34,6 @@ function Survey:load()
     -- Control current screen
     self.currentScreen = "start"
 
-    -- Initilaize player object
-    self.player = {}
-    self.player.x = 550
-    self.player.y = 400
-    self.player.speed = 3
-    self.player.sprite = love.graphics.newImage("assets/Sprite.png")
-    -- newGrid(grid cell width, grid cell height, entire grid width, entire grid height)
-    self.player.grid = self.anim8.newGrid(self.player.sprite:getWidth()/3, self.player.sprite:getHeight()/4, self.player.sprite:getWidth(), self.player.sprite:getHeight())
-
-    -- Initilaize animation object
-    self.player.animations = {}
-    -- newAnimation(player.grid('column - column', row), frames/second)
-    self.player.animations.up = self.anim8.newAnimation(self.player.grid('1-3', 1), 0.2)
-    self.player.animations.left = self.anim8.newAnimation(self.player.grid('1-3', 2), 0.2)
-    self.player.animations.down = self.anim8.newAnimation(self.player.grid('1-3', 3), 0.2)
-    self.player.animations.right = self.anim8.newAnimation(self.player.grid('1-3', 4), 0.2)
-    self.player.anim = self.player.animations.left
-
     -- Define technician's position
     self.techX = 300
     self.techY = 400
@@ -62,36 +45,8 @@ end
 
 
 function Survey:update(dt)
-
-    local isMoving = false 
-     -- User is moving the player with arrow keys
     if self.currentScreen == "empty" then
-        if love.keyboard.isDown("right") then 
-            self.player.x = self.player.x + self.player.speed
-            self.player.anim = self.player.animations.right
-            isMoving = true
-        end
-        if love.keyboard.isDown("left") then 
-            self.player.x = self.player.x - self.player.speed 
-            self.player.anim = self.player.animations.left
-            isMoving = true
-        end
-        if love.keyboard.isDown("down") then 
-            self.player.y = self.player.y + self.player.speed 
-            self.player.anim = self.player.animations.down
-            isMoving = true
-        end
-        if love.keyboard.isDown("up") then 
-            self.player.y = self.player.y - self.player.speed 
-            self.player.anim = self.player.animations.up
-            isMoving = true
-        end 
-
-        if isMoving == false then
-            self.player.anim:gotoFrame(1)
-        end
-
-        self.player.anim:update(dt)
+        Animation:update(dt)
     end
 end
 
@@ -132,8 +87,7 @@ function Survey:draw()
         love.graphics.draw(self.tech, self.techX, self.techY)
         
         -- Draw player sprite
-        self.player.anim:draw(self.player.sprite, self.player.x, self.player.y, nil, 1.5)
-        --self.player.anim:draw(self.player.sprite, self.player.x, self.player.y, nil, 2)
+        Animation:draw()
 
         -- Display dialogue box
         if self.showDialogue then
@@ -187,15 +141,9 @@ function Survey:keypressed(key)
      -- Return to survey screen for another attempt
     elseif self.currentScreen == "incorrect" and key == "return" then
         self.currentScreen = "survey"
-     -- Check if space is pressed while near the technician
-    elseif key == "space" and self.currentScreen == "empty" then
-        local dx = self.player.x - self.techX
-        local dy = self.player.y - self.techY
-        local distance = math.sqrt(dx * dx + dy * dy) -- Calculate distance
-
-        if distance <= self.techRadius then
-            self.showDialogue = true
-        end
+    elseif self.currentScreen == "empty" then
+        -- Check if space is pressed while near the technician
+        Animation:keypressed(key)
     elseif key == "return" and self.currentScreen == "empty" and self.showDialogue then
         -- Move on to Game phase: Unpacking and Inspecting the Kit 
         GameState = "unpacking"
