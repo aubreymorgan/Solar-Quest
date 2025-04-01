@@ -1,6 +1,10 @@
 Animation = {}
 
-function Animation:load()
+function Animation:load(survey)
+    -- Load animation file from library
+    self.anim8 = require 'libraries/anim8'
+    self.survey = survey  -- Store reference to Survey
+
     -- Initilaize player object
     self.player = {}
     self.player.x = 550
@@ -21,40 +25,54 @@ end
 function Animation:update(dt)
 
     local isMoving = false 
-     -- User is moving the player with arrow keys
-    if self.currentScreen == "empty" then
-        if love.keyboard.isDown("right") then 
-            self.player.x = self.player.x + self.player.speed
-            self.player.anim = self.player.animations.right
-            isMoving = true
-        end
-        if love.keyboard.isDown("left") then 
-            self.player.x = self.player.x - self.player.speed 
-            self.player.anim = self.player.animations.left
-            isMoving = true
-        end
-        if love.keyboard.isDown("down") then 
-            self.player.y = self.player.y + self.player.speed 
-            self.player.anim = self.player.animations.down
-            isMoving = true
-        end
-        if love.keyboard.isDown("up") then 
-            self.player.y = self.player.y - self.player.speed 
-            self.player.anim = self.player.animations.up
-            isMoving = true
-        end 
 
-        if isMoving == false then
-            self.player.anim:gotoFrame(1)
-        end
-
-        self.player.anim:update(dt)
+    if love.keyboard.isDown("right") then 
+        self.player.x = self.player.x + self.player.speed
+        self.player.anim = self.player.animations.right
+        isMoving = true
     end
+    if love.keyboard.isDown("left") then 
+        self.player.x = self.player.x - self.player.speed 
+        self.player.anim = self.player.animations.left
+        isMoving = true
+    end
+    if love.keyboard.isDown("down") then 
+        self.player.y = self.player.y + self.player.speed 
+        self.player.anim = self.player.animations.down
+        isMoving = true
+    end
+    if love.keyboard.isDown("up") then 
+        self.player.y = self.player.y - self.player.speed 
+        self.player.anim = self.player.animations.up
+        isMoving = true
+    end 
+
+    if isMoving == false then
+        self.player.anim:gotoFrame(1)
+    end
+
+    self.player.anim:update(dt)
+
 end
 
 function Animation:draw()
-     -- Draw player sprite
-     self.player.anim:draw(self.player.sprite, self.player.x, self.player.y, nil, 1.5)
+    -- Draw player sprite
+    self.player.anim:draw(self.player.sprite, self.player.x, self.player.y, nil, 1.5)
+end
+
+function Animation:keypressed(key)
+    -- Check if space is pressed while near the technician
+    if key == "space" then
+        local dx = self.player.x - self.survey.techX
+        local dy = self.player.y - self.survey.techY
+        -- Calculate distance between layer and tecnician
+        local distance = math.sqrt(dx * dx + dy * dy)
+
+        if distance <= self.survey.techRadius then
+            -- Update Survey's variable
+            self.survey.showDialogue = true  
+        end
+    end
 end
 
 
