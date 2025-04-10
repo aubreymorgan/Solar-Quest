@@ -83,3 +83,5 @@ function Pause:keypressed(key)
     self.pointerX = self.option[self.currentIndex].x
     self.pointerY = self.option[self.currentIndex].y
 end
+
+return Pause

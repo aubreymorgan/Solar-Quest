@@ -1,156 +1,323 @@
--- Move on to Game phase: Unpacking and Inspecting the Kit 
--- GameState = "unpacking"
-require("animation")
-
 Survey = {}
 
 function Survey:load()
-    -- Load animation and pass Survey as a parameter
-    Animation:load(self) -- Pass Survey as a parameter
-
+    Animation:load()
     love.graphics.setDefaultFilter("nearest", "nearest")
+    self.schoolYardScreen = love.graphics.newImage("assets/CrackedSchool.png")
+    self.techHead = love.graphics.newImage("assets/TechHead.png")
+    self.solarMeterRed = love.graphics.newImage("assets/SolarMeterRed.png")
+    self.solarMeterYellow = love.graphics.newImage("assets/SolarMeterYellow.png")
+    self.solarMeterGreen = love.graphics.newImage("assets/SolarMeterGreen.png")
+    self.roofTile = love.graphics.newImage("assets/RepairTile.png")
+    self.repairedSchool = love.graphics.newImage("assets/RepairedSchool.png")
 
-    -- Initilaize images from assets folder
-    self.startGameScreen = love.graphics.newImage("assets/StartGame.png")
-    self.schoolYardScreen = love.graphics.newImage("assets/Schoolyard.png")
-    self.solarPanel = love.graphics.newImage("assets/panel.png")
-    self.correct = love.graphics.newImage("assets/correct.png")
-    self.incorrect = love.graphics.newImage("assets/incorrect.png")
-    self.empty = love.graphics.newImage("assets/EmptySchoolyard.png")
-    self.tech = love.graphics.newImage("assets/TechStanding.png")
+    self.scanZones = {
+        { y = 0, height = 140, meter = "yellow", assessment = "This area seems to be getting some shadows early in the morning from the school building and trees..." },
+        { y = 140, height = 88, meter = "green", assessment = "This area gets great sunlight! Although it looks like the roof needs to be repaired first..." },
+        { y = 228, height = 161, meter = "red", assessment = "This area is not compatible for mounting solar panels..." },
+        { y = 390, height = 98, meter = "yellow", assessment = "This area seems to be getting some shadows later in the day from the school building and trees..." },
+    }
+    self.currentZoneIndex = 1
 
-    -- Define the potential site coordinates
-    self.sites = {
-        {x = 223, y = 109}, -- Site1
-        {x = 436, y = 109}, -- Site2
-        {x = 625, y = 205}  -- Site3
+    self.blinkTimer = 0
+    self.showPressSpace = true
+
+    self.tile = {
+        x = 660,
+        y = 500,
+        width = self.roofTile:getWidth(),
+        height = self.roofTile:getHeight(),
+        dragging = false,
+        offsetX = 0,
+        offsetY = 0
     }
 
-    -- Initalize the solar panel location
-    self.currentSiteIndex = 1
-    self.panelX = self.sites[self.currentSiteIndex].x
-    self.panelY = self.sites[self.currentSiteIndex].y
+    self.targetArea = { x = 243, y = 147, width = 79, height = 79 }
 
-    -- Control current screen
     self.currentScreen = "start"
 
-    -- Define technician's position
-    self.techX = 300
-    self.techY = 400
-    self.techRadius = 100  -- Interaction radius
-
-    -- Variable to track whether dialogue is active
-    self.showDialogue = false
+    self.doorX = 400
+    self.doorY = 300
+    self.doorRadius = 150 -- Increased from 75 to match previous fix
 end
 
-
 function Survey:update(dt)
+    if self.currentScreen == "start" or self.currentScreen == "survey" or self.currentScreen == "ready" or self.currentScreen == "scanning" or self.currentScreen == "correct" or self.currentScreen == "incorrect" or self.currentScreen == "empty" then
+        self.blinkTimer = self.blinkTimer + dt
+        if self.blinkTimer >= 0.5 then
+            self.blinkTimer = 0
+            self.showPressSpace = not self.showPressSpace
+        end
+    end
+
     if self.currentScreen == "empty" then
         Animation:update(dt)
+    end
+
+    if self.currentScreen == "repair" and self.tile.dragging then
+        local x, y = love.mouse.getPosition()
+        self.tile.x = x - self.tile.offsetX
+        self.tile.y = y - self.tile.offsetY
     end
 end
 
 function Survey:draw()
-
-    -- Draw screen images and/or solar panel
     if self.currentScreen == "start" then
-        love.graphics.draw(self.startGameScreen, 0, 0)
-
-     -- Draw scoolyard background
+        love.graphics.draw(self.schoolYardScreen, 0, 0)
+        love.graphics.setColor(0, 0, 0, 0.7)
+        love.graphics.rectangle("fill", 50, 490, 700, 100, 10)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.setFont(ProggyTiny)
+        love.graphics.printf("Today we are going to install your school's new solar panels! First, we need to survey the area to find the best location to install the panels. Let's go!", 180, 505, 560, "left")
+        love.graphics.draw(self.techHead, 60, 490)
+        love.graphics.setColor(1, 1, 1)
+        if self.showPressSpace then
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.rectangle("line", 670, 565, 60, 20)
+            love.graphics.printf("SPACE", 670, 567, 60, "center")
+        end
     elseif self.currentScreen == "survey" then
         love.graphics.draw(self.schoolYardScreen, 0, 0)
-
-        -- Scale the solar panel image to 88.4 x 94.5 pixels
-        local originalWidth = self.solarPanel:getWidth()
-        local originalHeight = self.solarPanel:getHeight()
-        local scaleX = 88.4 / originalWidth
-        local scaleY = 94.5 / originalHeight
-
-        -- Apply scaling factors and draw solar panel
-        love.graphics.draw( self.solarPanel, self.panelX, 
-                            self.panelY, 0, scaleX, scaleY )
-
-     -- Draw correct choice dialog
+        love.graphics.setColor(0, 0, 0, 0.7)
+        love.graphics.rectangle("fill", 50, 490, 700, 100, 10)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.setFont(ProggyTiny)
+        love.graphics.printf("We can use this solar meter to determine how much sunlight an area is getting. Use the up/down keys to scan an area.", 180, 510, 500, "left")
+        love.graphics.draw(self.techHead, 60, 490)
+        love.graphics.draw(self.solarMeterRed, 673, 485)
+        love.graphics.setColor(1, 1, 1)
+        if self.showPressSpace then
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.rectangle("line", 610, 565, 60, 20)
+            love.graphics.printf("SPACE", 610, 567, 60, "center")
+        end
+    elseif self.currentScreen == "scanning" then
+        love.graphics.draw(self.schoolYardScreen, 0, 0)
+        local zone = self.scanZones[self.currentZoneIndex]
+        love.graphics.setColor(0, 0, 0, 0.7)
+        love.graphics.rectangle("fill", 0, zone.y, 800, zone.height)
+        love.graphics.setColor(1, 1, 1)
+        local text = "Press ENTER to select this area"
+        local font = love.graphics.getFont()
+        local textWidth = font:getWidth(text)
+        local textHeight = font:getHeight()
+        local centerX = 0 + 400 - (textWidth / 2)
+        local centerY = zone.y + (zone.height / 2) - (textHeight / 2)
+        love.graphics.print(text, centerX, centerY)
+        love.graphics.setColor(0, 0, 0, 0.7)
+        love.graphics.rectangle("fill", 50, 490, 700, 100, 10)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.setFont(ProggyTiny)
+        love.graphics.printf(zone.assessment, 180, 510, 500, "left")
+        love.graphics.draw(self.techHead, 60, 490)
+        love.graphics.setColor(1, 1, 1)
+        if self.showPressSpace then
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.rectangle("line", 570, 565, 30, 20)
+            love.graphics.printf("UP", 570, 567, 30, "center")
+            love.graphics.rectangle("line", 610, 565, 50, 20)
+            love.graphics.printf("DOWN", 610, 567, 50, "center")
+        end
+        if zone.meter == "red" then
+            love.graphics.draw(self.solarMeterRed, 673, 485)
+        elseif zone.meter == "yellow" then
+            love.graphics.draw(self.solarMeterYellow, 673, 485)
+        elseif zone.meter == "green" then
+            love.graphics.draw(self.solarMeterGreen, 673, 485)
+        end
     elseif self.currentScreen == "correct" then
-        love.graphics.draw(self.correct, 0, 0)
-
-     -- Draw incorrect choice dialog
+        love.graphics.draw(self.schoolYardScreen, 0, 0)
+        local zone = self.scanZones[self.currentZoneIndex]
+        love.graphics.setColor(0, 1, 0, 0.5)
+        love.graphics.rectangle("fill", 0, zone.y, 800, zone.height)
+        love.graphics.setColor(1, 1, 1)
+        local text = "Correct!"
+        local font = love.graphics.getFont()
+        local textWidth = font:getWidth(text)
+        local textHeight = font:getHeight()
+        local centerX = 0 + 400 - (textWidth / 2)
+        local centerY = zone.y + (zone.height / 2) - (textHeight / 2)
+        love.graphics.setColor(0, 0, 0)
+        love.graphics.print(text, centerX, centerY)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.setColor(0, 0, 0, 0.7)
+        love.graphics.rectangle("fill", 50, 490, 700, 100, 10)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.setFont(ProggyTiny)
+        love.graphics.printf("That solar meter reading looks great! Now let's repair that roof!", 180, 510, 500, "left")
+        love.graphics.draw(self.techHead, 60, 490)
+        love.graphics.setColor(1, 1, 1)
+        if self.showPressSpace then
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.rectangle("line", 610, 565, 60, 20)
+            love.graphics.printf("SPACE", 610, 567, 60, "center")
+        end
+        if zone.meter == "red" then
+            love.graphics.draw(self.solarMeterRed, 673, 485)
+        elseif zone.meter == "yellow" then
+            love.graphics.draw(self.solarMeterYellow, 673, 485)
+        elseif zone.meter == "green" then
+            love.graphics.draw(self.solarMeterGreen, 673, 485)
+        end
     elseif self.currentScreen == "incorrect" then
-        love.graphics.draw(self.incorrect, 0, 0)
-
+        love.graphics.draw(self.schoolYardScreen, 0, 0)
+        local zone = self.scanZones[self.currentZoneIndex]
+        love.graphics.setColor(1, 0, 0, 0.5)
+        love.graphics.rectangle("fill", 0, zone.y, 800, zone.height)
+        love.graphics.setColor(1, 1, 1)
+        local text = "Incorrect!"
+        local font = love.graphics.getFont()
+        local textWidth = font:getWidth(text)
+        local textHeight = font:getHeight()
+        local centerX = 0 + 400 - (textWidth / 2)
+        local centerY = zone.y + (zone.height / 2) - (textHeight / 2)
+        love.graphics.setColor(0, 0, 0)
+        love.graphics.print(text, centerX, centerY)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.setColor(0, 0, 0, 0.7)
+        love.graphics.rectangle("fill", 50, 490, 700, 100, 10)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.setFont(ProggyTiny)
+        love.graphics.printf("We need to choose an area with a higher solar meter reading. Please try again!", 180, 510, 500, "left")
+        love.graphics.draw(self.techHead, 60, 490)
+        love.graphics.setColor(1, 1, 1)
+        if self.showPressSpace then
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.rectangle("line", 610, 565, 60, 20)
+            love.graphics.printf("SPACE", 610, 567, 60, "center")
+        end
+        if zone.meter == "red" then
+            love.graphics.draw(self.solarMeterRed, 673, 485)
+        elseif zone.meter == "yellow" then
+            love.graphics.draw(self.solarMeterYellow, 673, 485)
+        elseif zone.meter == "green" then
+            love.graphics.draw(self.solarMeterGreen, 673, 485)
+        end
+    elseif self.currentScreen == "repair" then
+        love.graphics.draw(self.schoolYardScreen, 0, 0)
+        love.graphics.setColor(0, 0, 0, 0.7)
+        love.graphics.rectangle("fill", 50, 490, 700, 100, 10)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.setFont(ProggyTiny)
+        love.graphics.printf("We can use this roof tile to repair the damaged roof. Just drag and drop the tile onto the damaged area", 180, 510, 500, "left")
+        love.graphics.draw(self.techHead, 60, 490)
+        love.graphics.draw(self.roofTile, self.tile.x, self.tile.y)
+        love.graphics.setColor(1, 1, 1)
+    elseif self.currentScreen == "ready" then
+        love.graphics.draw(self.repairedSchool, 0, 0)
+        love.graphics.setColor(0, 0, 0, 0.7)
+        love.graphics.rectangle("fill", 50, 490, 700, 100, 10)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.setFont(ProggyTiny)
+        love.graphics.printf("Now it's time to head inside so we can start unpacking our solar power kit.", 180, 505, 560, "left")
+        love.graphics.draw(self.techHead, 60, 490)
+        love.graphics.setColor(1, 1, 1)
+        if self.showPressSpace then
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.rectangle("line", 670, 565, 60, 20)
+            love.graphics.printf("SPACE", 670, 567, 60, "center")
+        end
     elseif self.currentScreen == "empty" then
-        love.graphics.draw(self.empty, 0, 0)
-        love.graphics.setColor(1, 1, 1) -- White text
-        love.graphics.printf("Move with arrow keys. Press space bar to talk to technician.", 160, 0, 480, "center")
-
-        -- Draw Technician sprite
-        love.graphics.draw(self.tech, self.techX, self.techY)
-        
-        -- Draw player sprite
-        Animation:draw()
-
-        -- Display dialogue box
-        if self.showDialogue then
-            love.graphics.setColor(0, 0, 0, 0.7) -- Semi-transparent black box
-            love.graphics.rectangle("fill", 150, 500, 500, 100, 10)
-            love.graphics.setColor(1, 1, 1) -- White text
-            love.graphics.printf("Great work! Now let's go unpack the solar panel kit.", 160, 520, 480, "center")
-            love.graphics.setColor(1, 1, 1) -- Reset color
+        love.graphics.draw(self.repairedSchool, 0, 0)
+        Animation:draw(1) -- Use 1x scale in survey phase
+        love.graphics.setColor(0, 0, 0, 0.7)
+        love.graphics.rectangle("fill", 50, 490, 700, 100, 10)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.printf("Move with arrow keys. Press the space bar to go inside the school.", 180, 505, 560, "left")
+        love.graphics.draw(self.techHead, 60, 490)
+        love.graphics.setColor(1, 1, 1)
+        if self.showPressSpace then
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.rectangle("line", 670, 565, 60, 20)
+            love.graphics.printf("SPACE", 670, 567, 60, "center")
         end
     end
 end
 
 function Survey:keypressed(key)
-    -- User proceds by using enter key
-    if self.currentScreen == "start" and key == "return" then
-        self.currentScreen = "survey"
-
-     -- User pauses the game using the escape key
-    elseif key == "escape" then
+    if key == "escape" then
         GameState = "pause"
-
-     -- User is moving the solar panel with arrow keys
-    elseif self.currentScreen == "survey" then
-
-        -- Move to the next site if not already at the last site
-        if key == "right" then
-            if self.currentSiteIndex < #self.sites then
-                self.currentSiteIndex = self.currentSiteIndex + 1
-            end
-
-         -- Move to the previous site if not already at the first site
-        elseif key == "left" then
-            if self.currentSiteIndex > 1 then
-                self.currentSiteIndex = self.currentSiteIndex - 1
-            end
-
-         -- Check the location of the selected site
-        elseif key == "return" then
-
-            -- Correct choice
-            if self.currentSiteIndex == 2 then
-                self.currentScreen = "correct"
-                self.currentScreen = "empty"
-
-             -- Incorrect choice
-            else
-                self.currentScreen = "incorrect" 
-            end
-        end
-    
-     -- Return to survey screen for another attempt
-    elseif self.currentScreen == "incorrect" and key == "return" then
+    elseif self.currentScreen == "start" and key == "space" then
         self.currentScreen = "survey"
+    elseif self.currentScreen == "survey" then
+        if key == "space" then
+            self.currentScreen = "scanning"
+        elseif key == "backspace" then
+            self.currentScreen = "start"
+        end
+    elseif self.currentScreen == "scanning" then
+        if key == "up" then
+            if self.currentZoneIndex > 1 then
+                self.currentZoneIndex = self.currentZoneIndex - 1
+            end
+        elseif key == "down" then
+            if self.currentZoneIndex < #self.scanZones then
+                self.currentZoneIndex = self.currentZoneIndex + 1
+            end
+        elseif key == "return" then
+            if self.currentZoneIndex == 2 then
+                self.currentScreen = "correct"
+            else
+                self.currentScreen = "incorrect"
+            end
+        elseif key == "backspace" then
+            self.currentScreen = "survey"
+        end
+    elseif self.currentScreen == "incorrect" then
+        if key == "space" then
+            self.currentScreen = "scanning"
+        elseif key == "backspace" then
+            self.currentScreen = "scanning"
+        end
+    elseif self.currentScreen == "correct" then
+        if key == "space" then
+            self.currentScreen = "repair"
+        elseif key == "backspace" then
+            self.currentScreen = "scanning"
+        end
+    elseif self.currentScreen == "repair" then
+        if key == "backspace" then
+            self.currentScreen = "scanning"
+        end
+    elseif self.currentScreen == "ready" then
+        if key == "space" then
+            self.currentScreen = "empty"
+        elseif key == "backspace" then
+            self.currentScreen = "repair"
+        end
     elseif self.currentScreen == "empty" then
-        -- Check if space is pressed while near the technician
-        Animation:keypressed(key)
-    elseif key == "return" and self.currentScreen == "empty" and self.showDialogue then
-        -- Move on to Game phase: Unpacking and Inspecting the Kit 
-        GameState = "unpacking"
+        local scale = 1
+        if Animation:keypressed(key, self.doorX, self.doorY, self.doorRadius, scale) then
+            GameState = "level1" -- Transition to Level 1 instead of "unpacking"
+        elseif key == "backspace" then
+            self.currentScreen = "repair"
+        end
     end
-
-    -- Update panel position based on current site
-    self.panelX = self.sites[self.currentSiteIndex].x
-    self.panelY = self.sites[self.currentSiteIndex].y
 end
 
+function Survey:mousepressed(x, y, button)
+    if self.currentScreen == "repair" and button == 1 then
+        local tile = self.tile
+        if x >= tile.x and x <= tile.x + tile.width and y >= tile.y and y <= tile.y + tile.height then
+            tile.dragging = true
+            tile.offsetX = x - tile.x
+            tile.offsetY = y - tile.y
+        end
+    end
+end
+
+function Survey:mousereleased(x, y, button)
+    if self.currentScreen == "repair" and button == 1 then
+        local tile = self.tile
+        tile.dragging = false
+        local target = self.targetArea
+        if x >= target.x and x <= target.x + target.width and y >= target.y and y <= target.y + target.height then
+            print("Tile successfully placed!")
+            self.currentScreen = "ready"
+        else
+            print("Try again!")
+        end
+    end
+end
+
+return Survey
